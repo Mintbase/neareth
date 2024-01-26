@@ -25,7 +25,7 @@ cat ./neardev/dev-account
 ## 2. Retrieve an Existing Key (View)
 
 ```bash
-# Use near-cli to get the greeting
+# Use near-cli to get the key
 near view <dev-account> get_key '{"account_id": <SOME_ACCOUNT>}'
 ```
 
@@ -33,7 +33,7 @@ near view <dev-account> get_key '{"account_id": <SOME_ACCOUNT>}'
 `set_key` changes the contract's state, for which it is a `change` method.
 
 ```bash
-# Use near-cli to set a new greeting
+# Use near-cli to set a new key
 near call <dev-account> set_key '{"encrypted_key": "whateva"}' --accountId <dev-account>
 ```
 
