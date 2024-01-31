@@ -23,7 +23,7 @@ export class Base58KeyManager implements EthKeyManager {
   async encryptAndSetKey(
     ethWallet: HDNodeWallet,
     encryptionKey: string,
-  ): Promise<string | null> {
+  ): Promise<string | undefined> {
     let keyPair = KeyPair.fromString(encryptionKey);
     let encodedEthKey = this.encodeEthKey(ethWallet.privateKey);
     const { secret: encryptedKey, nonce } = create(
@@ -33,12 +33,12 @@ export class Base58KeyManager implements EthKeyManager {
     );
     console.log("Posting Encrypted Key", encryptedKey, nonce);
     await this.contract.methods.set_key({ encrypted_key: encryptedKey });
-    return nonce;
+    return nonce || undefined;
   }
 
   async retrieveAndDecryptKey(
     nearAccount: NearAccount,
-    nonce?: string | undefined,
+    nonce?: string,
   ): Promise<string> {
     const retrievedKey = await this.contract.methods.get_key({
       account_id: nearAccount.accountId,

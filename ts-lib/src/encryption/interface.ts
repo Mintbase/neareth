@@ -11,7 +11,7 @@ export interface EthKeyManager {
   encryptAndSetKey(
     ethWallet: ethers.HDNodeWallet,
     encryptionKey: string,
-  ): Promise<string | null>;
+  ): Promise<string | undefined>;
 
   retrieveAndDecryptKey(
     nearAccount: NearAccount,

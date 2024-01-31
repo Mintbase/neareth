@@ -61,7 +61,7 @@ describe("EthKeys contract tests", () => {
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey(
       { accountId, privateKey },
-      nonce ? nonce : undefined,
+      nonce,
     );
     expect(decryptedKey).toBe(ethWallet.privateKey);
   });
