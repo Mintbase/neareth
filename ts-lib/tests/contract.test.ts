@@ -2,19 +2,12 @@ import { connect, Contract, KeyPair, keyStores, utils } from "near-api-js";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import * as path from "path";
-// @ts-ignore
-import { create, open } from "@nearfoundation/near-js-encryption-box";
-import bs58 from "bs58";
+import { Base58KeyManager, KeyContract } from "../src";
 
 dotenv.config({
   path: path.resolve(__dirname, "../../neardev/dev-account.env"),
 });
 jest.setTimeout(30000);
-
-interface EthKeysContract {
-  set_key: (args: { encrypted_key: string }) => Promise<void>;
-  get_key: (args: { account_id: string }) => Promise<string | null>;
-}
 
 const contractName = process.env.CONTRACT_NAME as string;
 if (!contractName) {
@@ -30,7 +23,7 @@ const keyStore = new keyStores.InMemoryKeyStore();
 let keyPair = KeyPair.fromString(privateKey);
 const accountId = process.env.TEST_ACCOUNT_ID!;
 
-async function initContract(): Promise<EthKeysContract> {
+async function initContract(): Promise<KeyContract> {
   await keyStore.setKey("testnet", accountId, keyPair);
 
   const config = {
@@ -45,51 +38,31 @@ async function initContract(): Promise<EthKeysContract> {
   const near = await connect(config);
   const account = await near.account(accountId);
 
-  const contract = new Contract(account, contractName, {
-    viewMethods: ["get_key"],
-    changeMethods: ["set_key"],
-    useLocalViewExecution: false,
-  }) as unknown as EthKeysContract;
+  const contract = new KeyContract(contractName, account);
 
   return contract;
 }
 
-function encodeEthKey(key: string): string {
-  const bytes = Buffer.from(key.slice(2), "hex");
-  const encodedKey = bs58.encode(bytes);
-  return encodedKey;
-}
-
-function decodeEthKey(key: string): string {
-  const bytes = Buffer.from(bs58.decode(key));
-  return "0x" + bytes.toString("hex");
-}
-
 describe("EthKeys contract tests", () => {
-  let contract: EthKeysContract;
+  let contract: KeyContract;
 
   beforeAll(async () => {
     contract = await initContract();
   });
 
-  it("should generate ethWallet, encode and encrypt private key, set value on contract, retrieve, decrypt and match", async () => {
+  it("Base58 RoundTrip", async () => {
+    const keyManager = new Base58KeyManager(contract);
+
     // TODO - can we create not random?
-    let ethWallet = ethers.Wallet.createRandom();
-    let encodedEthKey = encodeEthKey(ethWallet.privateKey);
-    const { secret: encryptedKey, nonce } = create(
-      encodedEthKey,
-      keyPair.getPublicKey().toString(),
-      privateKey,
+    const ethWallet = ethers.Wallet.createRandom();
+
+    // TODO - include nonce on contract so we don't have to remember it.
+    const nonce = await keyManager.encryptAndSetKey(ethWallet, privateKey);
+
+    const decryptedKey = await keyManager.retrieveAndDecryptKey(
+      { accountId, privateKey },
+      nonce ? nonce : undefined,
     );
-    console.log("Encrypted Key", encryptedKey, nonce);
-    await contract.set_key({ encrypted_key: encryptedKey });
-    const retrievedKey = await contract.get_key({ account_id: accountId });
-    const decryptedKey = open(
-      retrievedKey!,
-      keyPair.getPublicKey().toString(),
-      privateKey,
-      nonce,
-    );
-    expect(decodeEthKey(decryptedKey!)).toBe(ethWallet.privateKey);
+    expect(decryptedKey).toBe(ethWallet.privateKey);
   });
 });

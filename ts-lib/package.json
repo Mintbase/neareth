@@ -2,7 +2,7 @@
   "name": "neareth",
   "version": "1.0.0",
   "description": "The smart contract exposes two methods to enable storing and retrieving an encrypted (key, value)",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "jest",
     "lint": "eslint && prettier --check .",
