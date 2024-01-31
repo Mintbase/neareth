@@ -12,10 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Clippy
-        run: | 
-          rustup component add clippy
-          rustup target add wasm32-unknown-unknown
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # - name: Install Clippy
+      #   run: rustup component add clippy
       
       - name: Lint & Clippy
         run: cargo fmt --check && cargo clippy --all-targets --verbose -- -D warnings
