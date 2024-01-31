@@ -18,10 +18,11 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
-
-      - name: Build Rust Contract
-        run: ./scripts/build.sh
-        shell: bash
+      
+      # build.sh is run as part of sandbox testing.
+      # - name: Build Rust Contract
+      #   run: ./scripts/build.sh
+      #   shell: bash
       
       - name: Lint & Clippy
         run: cargo fmt --check && cargo clippy --all-targets --verbose -- -D warnings
