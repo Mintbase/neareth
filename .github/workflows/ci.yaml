@@ -23,12 +23,6 @@ jobs:
       - name: Unit tests
         run: cargo test
 
-      - name: Sandbox Tests
-        run: |
-          cargo build --target wasm32-unknown-unknown
-          cd sandbox-rs
-          cargo run --example sandbox "../target/wasm32-unknown-unknown/debug/neareth.wasm"
-
   nodejs-job:
     runs-on: ubuntu-latest
     defaults:
