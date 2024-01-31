@@ -1,3 +1,9 @@
+/**
+ * This Key Manager is based on the cryptography package provided by
+ * @nearfoundation/near-js-encryption-box
+ * It relies on base58 encoding and requires a nonce to decrypt the key!
+ */
+
 import { HDNodeWallet } from "ethers";
 import { KeyContract } from "../keyContract";
 import { EthKeyManager } from "./interface";
