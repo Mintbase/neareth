@@ -4,10 +4,9 @@
  * It relies on base58 encoding and requires a nonce to decrypt the key!
  */
 
-import { HDNodeWallet } from "ethers";
 import { KeyContract } from "../keyContract";
 import { EthKeyManager } from "./interface";
-import { NearAccount } from "../types";
+import { EthPrivateKey, NearAccount } from "../types";
 import bs58 from "bs58";
 import { KeyPair } from "near-api-js";
 import { create, open } from "@nearfoundation/near-js-encryption-box";
@@ -21,11 +20,11 @@ export class Base58KeyManager implements EthKeyManager {
   }
 
   async encryptAndSetKey(
-    ethWallet: HDNodeWallet,
+    ethPrivateKey: EthPrivateKey,
     encryptionKey: string,
   ): Promise<string | undefined> {
     let keyPair = KeyPair.fromString(encryptionKey);
-    let encodedEthKey = this.encodeEthKey(ethWallet.privateKey);
+    let encodedEthKey = this.encodeEthKey(ethPrivateKey.toString());
     const { secret: encryptedKey, nonce } = create(
       encodedEthKey,
       keyPair.getPublicKey().toString(),
@@ -39,21 +38,21 @@ export class Base58KeyManager implements EthKeyManager {
   async retrieveAndDecryptKey(
     nearAccount: NearAccount,
     nonce?: string,
-  ): Promise<string> {
+  ): Promise<EthPrivateKey> {
     const retrievedKey = await this.contract.methods.get_key({
       account_id: nearAccount.accountId,
     });
-    let keyPair = KeyPair.fromString(nearAccount.privateKey);
+    let keyPair = KeyPair.fromString(nearAccount.privateKey.toString());
     const decryptedKey = open(
       retrievedKey!,
       keyPair.getPublicKey().toString(),
-      nearAccount.privateKey,
+      nearAccount.privateKey.toString(),
       nonce!,
     );
     if (decryptedKey === null) {
       throw new Error("Unable to decrypt key!");
     }
-    return this.decodeEthKey(decryptedKey);
+    return new EthPrivateKey(this.decodeEthKey(decryptedKey));
   }
 
   private encodeEthKey(key: string): string {

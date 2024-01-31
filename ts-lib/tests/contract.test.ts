@@ -2,7 +2,13 @@ import { connect, Contract, KeyPair, keyStores, utils } from "near-api-js";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import * as path from "path";
-import { Base58KeyManager, KeyContract, CryptoJSKeyManager } from "../src";
+import {
+  Base58KeyManager,
+  KeyContract,
+  CryptoJSKeyManager,
+  EthPrivateKey,
+  NearPrivateKey,
+} from "../src";
 
 dotenv.config({
   path: path.resolve(__dirname, "../../neardev/dev-account.env"),
@@ -14,13 +20,13 @@ if (!contractName) {
   throw new Error("CONTRACT_NAME not found in environment");
 }
 
-const privateKey = process.env.TEST_PK as string;
-if (!privateKey) {
+const nearPrivateKey = process.env.TEST_PK as string;
+if (!nearPrivateKey) {
   throw new Error("TEST_PK not found in environment");
 }
 
 const keyStore = new keyStores.InMemoryKeyStore();
-let keyPair = KeyPair.fromString(privateKey);
+let keyPair = KeyPair.fromString(nearPrivateKey);
 const accountId = process.env.TEST_ACCOUNT_ID!;
 
 async function initContract(): Promise<KeyContract> {
@@ -45,37 +51,37 @@ async function initContract(): Promise<KeyContract> {
 
 describe("EthKeys contract tests", () => {
   let contract: KeyContract;
+  let ethPk: EthPrivateKey;
+  let nearPk: NearPrivateKey;
 
   beforeAll(async () => {
     contract = await initContract();
+    ethPk = new EthPrivateKey(
+      "0x38b499b2263de8d23944746a6922757e8da6184828d98fbfd6c88ebee1fad111",
+    );
+    nearPk = new NearPrivateKey(nearPrivateKey);
   });
 
   it("Base58 RoundTrip", async () => {
     const keyManager = new Base58KeyManager(contract);
-
-    // TODO - can we create not random?
-    const ethWallet = ethers.Wallet.createRandom();
-
     // TODO - include nonce on contract so we don't have to remember it.
-    const nonce = await keyManager.encryptAndSetKey(ethWallet, privateKey);
+    const nonce = await keyManager.encryptAndSetKey(ethPk, nearPrivateKey);
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey(
-      { accountId, privateKey },
+      { accountId, privateKey: nearPk },
       nonce,
     );
-    expect(decryptedKey).toBe(ethWallet.privateKey);
+    expect(decryptedKey).toStrictEqual(ethPk);
   });
 
   it("CryptoJS-AES RoundTrip", async () => {
     const keyManager = new CryptoJSKeyManager(contract);
-    const ethWallet = ethers.Wallet.createRandom();
-
-    await keyManager.encryptAndSetKey(ethWallet, privateKey);
+    await keyManager.encryptAndSetKey(ethPk, nearPrivateKey);
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey({
       accountId,
-      privateKey,
+      privateKey: nearPk,
     });
-    expect(decryptedKey).toBe(ethWallet.privateKey);
+    expect(decryptedKey).toStrictEqual(ethPk);
   });
 });
