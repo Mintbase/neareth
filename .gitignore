@@ -1,4 +1,4 @@
 wasm/*
-tests/node_modules
-tests/downloads
 target
+.env
+ts-lib/node_modules
