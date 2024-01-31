@@ -1,4 +1,4 @@
-name: Rust NEAR Contract and Node.js CI
+name: Rust & Node.js CI
 
 on:
   push:
