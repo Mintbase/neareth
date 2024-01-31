@@ -23,6 +23,9 @@ jobs:
       # - name: Build Rust Contract
       #   run: ./scripts/build.sh
       #   shell: bash
+
+      - name: Install Clippy
+        run: rustup component add clippy
       
       - name: Lint & Clippy
         run: cargo fmt --check && cargo clippy --all-targets --verbose -- -D warnings
