@@ -12,27 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Install Rust
-      #   uses: actions-rs/toolchain@v1
-      #   with:
-      #     toolchain: stable
-      #     profile: minimal
-      #     override: true
-      
-      # build.sh is run as part of sandbox testing.
-      # - name: Build Rust Contract
-      #   run: ./scripts/build.sh
-      #   shell: bash
-
       - name: Install Clippy
-        run: rustup component add clippy
+        run: | 
+          rustup component add clippy
+          rustup target add wasm32-unknown-unknown
       
       - name: Lint & Clippy
         run: cargo fmt --check && cargo clippy --all-targets --verbose -- -D warnings
 
-      - name: Run Rust tests
-        run: ./scripts/test.sh
-        shell: bash
+      - name: Unit tests
+        run: cargo test
+
+      - name: Sandbox Tests
+        run: |
+          cargo build --target wasm32-unknown-unknown
+          cargo run --example sandbox "./target/wasm32-unknown-unknown/debug/neareth.wasm"
 
   nodejs-job:
     runs-on: ubuntu-latest
