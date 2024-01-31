@@ -4,10 +4,9 @@
  * It relies on base58 encoding and requires a nonce to decrypt the key!
  */
 
-import { HDNodeWallet } from "ethers";
 import { KeyContract } from "../keyContract";
 import { EthKeyManager } from "./interface";
-import { NearAccount } from "../types";
+import { EthPrivateKey, NearAccount } from "../types";
 import CryptoJS from "crypto-js";
 
 export class CryptoJSKeyManager implements EthKeyManager {
@@ -19,11 +18,11 @@ export class CryptoJSKeyManager implements EthKeyManager {
   }
 
   async encryptAndSetKey(
-    ethWallet: HDNodeWallet,
+    ethPrivateKey: EthPrivateKey,
     encryptionKey: string,
   ): Promise<string | undefined> {
     let encryptedKey = CryptoJS.AES.encrypt(
-      ethWallet.privateKey,
+      ethPrivateKey.toString(),
       encryptionKey,
     );
     console.log("Posting Encrypted Key", encryptedKey.toString());
@@ -36,11 +35,14 @@ export class CryptoJSKeyManager implements EthKeyManager {
   async retrieveAndDecryptKey(
     nearAccount: NearAccount,
     // nonce?: string | undefined,
-  ): Promise<string> {
+  ): Promise<EthPrivateKey> {
     const retrievedKey = await this.contract.methods.get_key({
       account_id: nearAccount.accountId,
     });
-    let bytes = CryptoJS.AES.decrypt(retrievedKey!, nearAccount.privateKey);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    let bytes = CryptoJS.AES.decrypt(
+      retrievedKey!,
+      nearAccount.privateKey.toString(),
+    );
+    return new EthPrivateKey(bytes.toString(CryptoJS.enc.Utf8));
   }
 }
