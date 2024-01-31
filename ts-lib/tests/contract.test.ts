@@ -2,7 +2,7 @@ import { connect, Contract, KeyPair, keyStores, utils } from "near-api-js";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import * as path from "path";
-import { Base58KeyManager, KeyContract } from "../src";
+import { Base58KeyManager, KeyContract, CryptoJSKeyManager } from "../src";
 
 dotenv.config({
   path: path.resolve(__dirname, "../../neardev/dev-account.env"),
@@ -63,6 +63,19 @@ describe("EthKeys contract tests", () => {
       { accountId, privateKey },
       nonce,
     );
+    expect(decryptedKey).toBe(ethWallet.privateKey);
+  });
+
+  it("CryptoJS-AES RoundTrip", async () => {
+    const keyManager = new CryptoJSKeyManager(contract);
+    const ethWallet = ethers.Wallet.createRandom();
+
+    await keyManager.encryptAndSetKey(ethWallet, privateKey);
+
+    const decryptedKey = await keyManager.retrieveAndDecryptKey({
+      accountId,
+      privateKey,
+    });
     expect(decryptedKey).toBe(ethWallet.privateKey);
   });
 });
