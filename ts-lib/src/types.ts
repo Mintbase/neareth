@@ -33,7 +33,7 @@ export class NearPrivateKey {
 
   constructor(key: string) {
     if (!this.isNearPrivateKey(key)) {
-      throw new Error("Invalid Ethereum private key");
+      throw new Error("Invalid Near private key");
     }
     this.key = key;
   }
