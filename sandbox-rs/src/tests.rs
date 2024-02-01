@@ -6,7 +6,6 @@ use std::{env, fs};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let wasm_arg: &str = &(env::args().nth(1).unwrap());
     let wasm_filepath = fs::canonicalize(env::current_dir()?.join(wasm_arg))?;
-
     let worker = near_workspaces::sandbox().await?;
     let wasm = std::fs::read(wasm_filepath)?;
     let contract = worker.dev_deploy(&wasm).await?;
@@ -47,7 +46,7 @@ async fn test_set_get_key(
     let encrypted_key = "my_encrypted_key".to_string();
     let tx = alice
         .call(contract.id(), "set_key")
-        .args_json(json!({"encrypted_key": encrypted_key}))
+        .args_json(json!({"encrypted_key": encrypted_key, "overwrite": false}))
         .transact()
         .await?;
     assert!(tx.is_success());
@@ -61,7 +60,7 @@ async fn test_set_get_key(
 
     assert_eq!(key_after, Some(encrypted_key.clone()));
 
-    // anyone can read alices key:
+    // anyone can read Alice's (encrypted) key:
     let key_after: Option<String> = bob
         .call(contract.id(), "get_key")
         .args_json(json!({"account_id": alice.id()}))

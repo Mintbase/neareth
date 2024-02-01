@@ -22,6 +22,7 @@ export class Base58KeyManager implements EthKeyManager {
   async encryptAndSetKey(
     ethPrivateKey: EthPrivateKey,
     encryptionKey: string,
+    overwrite: boolean,
   ): Promise<string | undefined> {
     let keyPair = KeyPair.fromString(encryptionKey);
     let encodedEthKey = this.encodeEthKey(ethPrivateKey.toString());
@@ -31,7 +32,10 @@ export class Base58KeyManager implements EthKeyManager {
       encryptionKey,
     );
     console.log("Posting Encrypted Key", encryptedKey, nonce);
-    await this.contract.methods.set_key({ encrypted_key: encryptedKey });
+    await this.contract.methods.set_key({
+      encrypted_key: encryptedKey,
+      overwrite,
+    });
     return nonce || undefined;
   }
 

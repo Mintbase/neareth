@@ -4,7 +4,8 @@
   "description": "The smart contract exposes two methods to enable storing and retrieving an encrypted (key, value)",
   "main": "index.ts",
   "scripts": {
-    "test": "jest",
+    "build:contracts": "cd .. && cargo build --target wasm32-unknown-unknown",
+    "test": "npm run build:contracts && jest",
     "lint": "eslint && prettier --check .",
     "lint:fix": "eslint && prettier --write ."
   },
@@ -28,6 +29,8 @@
     "prettier": "^3.2.4",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "ava": "^4.3.1",
+    "near-workspaces": "^3.1.0"
   }
 }

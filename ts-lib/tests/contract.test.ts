@@ -1,5 +1,4 @@
-import { connect, Contract, KeyPair, keyStores, utils } from "near-api-js";
-import { ethers } from "ethers";
+import { connect, KeyPair, keyStores, utils } from "near-api-js";
 import * as dotenv from "dotenv";
 import * as path from "path";
 import {
@@ -13,7 +12,6 @@ import {
 dotenv.config({
   path: path.resolve(__dirname, "../../neardev/dev-account.env"),
 });
-jest.setTimeout(30000);
 
 const contractName = process.env.CONTRACT_NAME as string;
 if (!contractName) {
@@ -65,7 +63,11 @@ describe("EthKeys contract tests", () => {
   it("Base58 RoundTrip", async () => {
     const keyManager = new Base58KeyManager(contract);
     // TODO - include nonce on contract so we don't have to remember it.
-    const nonce = await keyManager.encryptAndSetKey(ethPk, nearPrivateKey);
+    const nonce = await keyManager.encryptAndSetKey(
+      ethPk,
+      nearPrivateKey,
+      false,
+    );
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey(
       { accountId, privateKey: nearPk },
@@ -76,7 +78,7 @@ describe("EthKeys contract tests", () => {
 
   it("CryptoJS-AES RoundTrip", async () => {
     const keyManager = new CryptoJSKeyManager(contract);
-    await keyManager.encryptAndSetKey(ethPk, nearPrivateKey);
+    await keyManager.encryptAndSetKey(ethPk, nearPrivateKey, false);
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey({
       accountId,
