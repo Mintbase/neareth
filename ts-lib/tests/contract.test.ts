@@ -1,5 +1,4 @@
-import { connect, Contract, KeyPair, keyStores, utils } from "near-api-js";
-import { ethers } from "ethers";
+import { connect, KeyPair, keyStores, utils } from "near-api-js";
 import * as dotenv from "dotenv";
 import * as path from "path";
 import {
@@ -13,7 +12,6 @@ import {
 dotenv.config({
   path: path.resolve(__dirname, "../../neardev/dev-account.env"),
 });
-jest.setTimeout(30000);
 
 const contractName = process.env.CONTRACT_NAME as string;
 if (!contractName) {

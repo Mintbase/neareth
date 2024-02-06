@@ -12,7 +12,6 @@ pub struct EthKeys {
     evm_key: LookupMap<AccountId, String>,
 }
 
-// Define the default, which automatically initializes the contract
 impl Default for EthKeys {
     fn default() -> Self {
         Self {
@@ -21,16 +20,29 @@ impl Default for EthKeys {
     }
 }
 
-// Implement the contract structure
 #[near_bindgen]
 impl EthKeys {
     // Sets the encrypted key for the sender's account.
-    pub fn set_key(&mut self, encrypted_key: String) {
+    pub fn set_key(&mut self, encrypted_key: String, overwrite: Option<bool>) -> Option<String> {
+        let overwrite = if let Some(provided_flag) = overwrite {
+            provided_flag
+        } else {
+            false
+        };
         // TODO - would be nice if there was some way to validate
         // that the encrypted key actualy contains expected data.
         let account_id = env::signer_account_id();
-        self.evm_key.insert(&account_id, &encrypted_key);
-        log_str(&format!("SetKey({account_id})"));
+        let result = match self.evm_key.insert(&account_id, &encrypted_key) {
+            Some(old_encrypted_key) => {
+                if !overwrite {
+                    env::panic_str("Key already set!");
+                }
+                Some(old_encrypted_key)
+            }
+            None => None,
+        };
+        log_str(&format!("SetKey({account_id}, {encrypted_key})"));
+        result
     }
 
     pub fn get_key(&self, account_id: AccountId) -> Option<String> {
@@ -67,10 +79,34 @@ mod tests {
 
         let encrypted_key = "my_encrypted_key".to_string();
 
-        contract.set_key(encrypted_key.clone());
+        let res = contract.set_key(encrypted_key.clone(), None);
+        assert_eq!(res, None);
 
-        let retrieved_key = contract.get_key(signer).unwrap();
+        let retrieved_key = contract.get_key(signer);
+        assert_eq!(Some(encrypted_key), retrieved_key);
+    }
 
-        assert_eq!(retrieved_key, encrypted_key);
+    #[test]
+    #[should_panic]
+    fn test_set_key_overwrite_failure() {
+        let signer = accounts(1);
+        let context = get_context(signer.clone());
+        let mut contract = EthKeys::default();
+        testing_env!(context);
+
+        contract.set_key("old_key".into(), None);
+        contract.set_key("new_key".into(), None);
+    }
+
+    #[test]
+    fn test_set_key_overwrite_passes() {
+        let signer = accounts(1);
+        let context = get_context(signer.clone());
+        let mut contract = EthKeys::default();
+        testing_env!(context);
+        let old_key = "old_key".to_string();
+        contract.set_key(old_key.clone(), None);
+        let reset_result = contract.set_key("new_key".into(), Some(true));
+        assert_eq!(reset_result, Some(old_key));
     }
 }

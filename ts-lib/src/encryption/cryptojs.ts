@@ -20,6 +20,7 @@ export class CryptoJSKeyManager implements EthKeyManager {
   async encryptAndSetKey(
     ethPrivateKey: EthPrivateKey,
     encryptionKey: string,
+    overwrite?: boolean,
   ): Promise<string | undefined> {
     let encryptedKey = CryptoJS.AES.encrypt(
       ethPrivateKey.toString(),
@@ -28,6 +29,7 @@ export class CryptoJSKeyManager implements EthKeyManager {
     console.log("Posting Encrypted Key", encryptedKey.toString());
     await this.contract.methods.set_key({
       encrypted_key: encryptedKey.toString(),
+      overwrite,
     });
     return undefined;
   }
