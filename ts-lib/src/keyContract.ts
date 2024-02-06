@@ -3,7 +3,7 @@ import { Account, Contract } from "near-api-js";
 export interface IKeyContract {
   set_key: (args: {
     encrypted_key: string;
-    overwrite: boolean;
+    overwrite?: boolean;
   }) => Promise<void>;
   get_key: (args: { account_id: string }) => Promise<string | null>;
 }

@@ -23,7 +23,12 @@ impl Default for EthKeys {
 #[near_bindgen]
 impl EthKeys {
     // Sets the encrypted key for the sender's account.
-    pub fn set_key(&mut self, encrypted_key: String, overwrite: bool) -> Option<String> {
+    pub fn set_key(&mut self, encrypted_key: String, overwrite: Option<bool>) -> Option<String> {
+        let overwrite = if let Some(provided_flag) = overwrite {
+            provided_flag
+        } else {
+            false
+        };
         // TODO - would be nice if there was some way to validate
         // that the encrypted key actualy contains expected data.
         let account_id = env::signer_account_id();
@@ -74,7 +79,7 @@ mod tests {
 
         let encrypted_key = "my_encrypted_key".to_string();
 
-        let res = contract.set_key(encrypted_key.clone(), false);
+        let res = contract.set_key(encrypted_key.clone(), None);
         assert_eq!(res, None);
 
         let retrieved_key = contract.get_key(signer);
@@ -89,8 +94,8 @@ mod tests {
         let mut contract = EthKeys::default();
         testing_env!(context);
 
-        contract.set_key("old_key".into(), false);
-        contract.set_key("new_key".into(), false);
+        contract.set_key("old_key".into(), None);
+        contract.set_key("new_key".into(), None);
     }
 
     #[test]
@@ -100,8 +105,8 @@ mod tests {
         let mut contract = EthKeys::default();
         testing_env!(context);
         let old_key = "old_key".to_string();
-        contract.set_key(old_key.clone(), false);
-        let reset_result = contract.set_key("new_key".into(), true);
+        contract.set_key(old_key.clone(), None);
+        let reset_result = contract.set_key("new_key".into(), Some(true));
         assert_eq!(reset_result, Some(old_key));
     }
 }

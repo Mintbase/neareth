@@ -30,27 +30,27 @@ describe("EthKeys contract tests", () => {
     const value = "Howdy";
     await user.call(contract, "set_key", {
       encrypted_key: value,
-      overwrite: false,
     });
     const key = await contract.view("get_key", { account_id: user.accountId });
     expect(key).toBe(value);
   });
   it("manual overwrite", async () => {
-    const value = "Howdy";
+    const oldValue = "Howdy";
     await user.call(contract, "set_key", {
-      encrypted_key: value,
-      overwrite: false,
+      encrypted_key: oldValue,
     });
     let key = await contract.view("get_key", { account_id: user.accountId });
-    expect(key).toBe(value);
+    expect(key).toBe(oldValue);
 
     const newValue = "Doody";
-    await user.call(contract, "set_key", {
-      encrypted_key: newValue,
-      overwrite: false,
-    });
+    await expect(() =>
+      user.call(contract, "set_key", {
+        encrypted_key: newValue,
+      }),
+    ).rejects.toThrow("Key already set!");
+
     key = await contract.view("get_key", { account_id: user.accountId });
-    expect(key).toBe(value);
+    expect(key).toBe(oldValue);
 
     await user.call(contract, "set_key", {
       encrypted_key: newValue,

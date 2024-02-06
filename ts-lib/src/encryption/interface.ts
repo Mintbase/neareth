@@ -11,7 +11,7 @@ export interface EthKeyManager {
   encryptAndSetKey(
     ethPrivateKey: EthPrivateKey,
     encryptionKey: string,
-    overwrite: boolean,
+    overwrite?: boolean,
   ): Promise<string | undefined>;
 
   retrieveAndDecryptKey(

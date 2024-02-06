@@ -63,11 +63,7 @@ describe("EthKeys contract tests", () => {
   it("Base58 RoundTrip", async () => {
     const keyManager = new Base58KeyManager(contract);
     // TODO - include nonce on contract so we don't have to remember it.
-    const nonce = await keyManager.encryptAndSetKey(
-      ethPk,
-      nearPrivateKey,
-      false,
-    );
+    const nonce = await keyManager.encryptAndSetKey(ethPk, nearPrivateKey);
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey(
       { accountId, privateKey: nearPk },
@@ -78,7 +74,7 @@ describe("EthKeys contract tests", () => {
 
   it("CryptoJS-AES RoundTrip", async () => {
     const keyManager = new CryptoJSKeyManager(contract);
-    await keyManager.encryptAndSetKey(ethPk, nearPrivateKey, false);
+    await keyManager.encryptAndSetKey(ethPk, nearPrivateKey);
 
     const decryptedKey = await keyManager.retrieveAndDecryptKey({
       accountId,
