@@ -24,6 +24,15 @@ impl Default for EthKeys {
 impl EthKeys {
     // Sets the encrypted key for the sender's account.
     pub fn set_key(&mut self, encrypted_key: String, overwrite: Option<bool>) -> Option<String> {
+        if env::predecessor_account_id() != env::signer_account_id() {
+            println!(
+                "predecessor {:?} != signer {:?}",
+                env::predecessor_account_id(),
+                env::signer_account_id()
+            );
+            env::panic_str("key can only be set directly by the account owner.");
+        }
+
         let overwrite = if let Some(provided_flag) = overwrite {
             provided_flag
         } else {
@@ -59,7 +68,8 @@ mod tests {
 
     fn get_context(signer_account_id: AccountId) -> VMContext {
         VMContextBuilder::new()
-            .signer_account_id(signer_account_id)
+            .signer_account_id(signer_account_id.clone())
+            .predecessor_account_id(signer_account_id)
             .build()
     }
 
@@ -108,5 +118,18 @@ mod tests {
         contract.set_key(old_key.clone(), None);
         let reset_result = contract.set_key("new_key".into(), Some(true));
         assert_eq!(reset_result, Some(old_key));
+    }
+
+    #[test]
+    #[should_panic(expected = "key can only be set directly by the account owner.")]
+    fn test_set_key_direct_calls_only() {
+        // Set invalid context.
+        let context = VMContextBuilder::new()
+            .signer_account_id(accounts(1))
+            .predecessor_account_id(accounts(2))
+            .build();
+        let mut contract = EthKeys::default();
+        testing_env!(context);
+        contract.set_key("super key".into(), Some(true));
     }
 }
